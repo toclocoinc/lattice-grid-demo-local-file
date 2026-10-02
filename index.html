@@ -40,6 +40,10 @@
   #grid-panel { grid-row: 1 / 3; grid-column: 1; }
   #map-panel { grid-row: 1; grid-column: 2; }
   #map-panel[hidden] { display: none; }
+  #pivot-panel { grid-row: 1; grid-column: 2; }
+  #pivot-panel[hidden] { display: none; }
+  #sql-text { width: 100%; box-sizing: border-box; font: 11.5px/1.4 ui-monospace, monospace; min-height: 4.5em; }
+  #sql-error { color: #b42318; font: 11.5px/1.4 ui-monospace, monospace; white-space: pre-wrap; margin: 4px 0; }
   #chart-panel { grid-row: 2; grid-column: 2; }
   .layout.no-map #chart-panel { grid-row: 1 / 3; }
   #map { height: 100%; width: 100%; }
@@ -62,9 +66,10 @@
 <header>
   <h1>Your file never leaves the browser</h1>
   <p class="lede">Drop a Parquet, CSV, TSV or NDJSON file. DuckDB-WASM opens it in a Web Worker in this tab; the
-    grid pushes every filter, sort and aggregate into it. Nothing is uploaded &mdash; closing the tab discards it.</p>
+    grid pushes every filter, sort and aggregate into it. Then query it with SQL and pivot and chart the result. Nothing is uploaded &mdash; no request carries your data, and closing the tab discards it.</p>
   <div class="bar">
     <button type="button" id="pick">Drop a file, or choose one&hellip;</button>
+    <button type="button" id="bundled">Try the small sample (344 penguins, bundled)</button>
     <button type="button" id="sample">Load the sample (89&nbsp;MB, one fetch)</button>
     <span id="bytes">Bytes sent since this file was opened: 0</span>
   </div>
@@ -78,14 +83,20 @@
     <div class="panel__body" id="grid"></div></div>
   <div class="panel" id="map-panel" hidden><div class="panel__head">Map</div>
     <div class="panel__body"><div id="map"></div></div></div>
+  <div class="panel" id="pivot-panel" hidden><div class="panel__head">Pivot of the SQL result (computed by DuckDB)</div>
+    <div class="panel__body" id="pivot"></div></div>
   <div class="panel" id="chart-panel"><div class="panel__head">Chart</div>
     <div class="panel__body" id="chart"></div></div>
 </div>
 <div class="foot">
   <div class="panel" id="stats-panel"><div class="panel__head">Statistics (subset vs. population)</div>
     <div class="panel__body" id="stats"></div></div>
-  <div class="panel" id="sql-panel"><div class="panel__head">Last DuckDB SQL</div>
-    <div class="panel__body"><pre id="sql">&mdash;</pre>
+  <div class="panel" id="sql-panel"><div class="panel__head">SQL on your file (table <code>data</code>) &middot; last DuckDB statement</div>
+    <div class="panel__body">
+      <div id="sql-box" hidden><textarea id="sql-text" spellcheck="false" aria-label="SQL query"></textarea>
+        <button type="button" id="sql-run">Run</button>
+        <div id="sql-error" role="alert"></div></div>
+      <pre id="sql">&mdash;</pre>
       <p class="note">Open DevTools &rarr; Network while you filter or sort: for a dropped file, no request
         ever appears &mdash; every query above runs against the file on this machine, in the worker.</p>
     </div></div>
@@ -107,6 +118,6 @@
   // Bound to toclocoinc.github.io; does nothing anywhere else. localhost never needs a key.
   LatticeGrid.setLicence('LG1.eyJ2IjoxLCJwIjoibGF0dGljZS1ncmlkIiwidCI6IlRPQ0xPQ08gSW5jIC0gcHVibGljIGRlbW9zIiwiZSI6IjIwMzAtMDEtMDEiLCJkIjpbInRvY2xvY29pbmMuZ2l0aHViLmlvIl19.9De42ua3aCGpiMB6EVRP7Tv-upUlDI-0T07rlSPzvCrsqg8t4YJi7SRnStEpAg48uzmcG7il1fR_TfwkUE7iCA');
 </script>
-<script type="module" src="app.js?v=20261002f-0009"></script>
+<script type="module" src="app.js?v=20261002g-1630"></script>
 </body>
 </html>

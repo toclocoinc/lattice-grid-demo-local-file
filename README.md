@@ -7,6 +7,21 @@ Worker in this tab. Nothing is uploaded. Closing the tab discards the data.
 
 Live: https://toclocoinc.github.io/lattice-grid-demo-local-file/
 
+## SQL on your own file
+
+Open a file (or press **Try the small sample**) and a SQL box appears: your file
+is the table `data`. Run any DuckDB `SELECT`; the result lands in a DuckDB table
+and the grid, KPI strip, chart, statistics (profile) panel and a **pivot**
+(first text column down, second across, the first number summed) all read that
+result. The row count in the status line is DuckDB's own `count(*)` of the
+result. A SQL error is shown in the page as DuckDB's message and leaves the
+previous result in place. Nothing is uploaded and nothing is requested after
+the page and DuckDB have loaded: in headless Chrome (net-log), after DuckDB was
+up, a drop, three queries and an invalid query made **0** requests. Caveat: a
+file with `lat`/`lon` columns shows the map when opened directly, and the map
+fetches OpenStreetMap tiles (coordinates of the viewport, not your data); a SQL
+result shows the pivot in the map's place, so SQL results make no tile requests.
+
 ## What it proves
 
 - **A dropped file is registered with DuckDB-WASM via `registerFileHandle`**,
@@ -86,6 +101,12 @@ through its `filters`, `sort` and KPI APIs to reproduce the numbers above.
 
 ## Data & licences
 
+- **Bundled small sample** (`penguins.csv`, 344 rows): the Palmer Penguins
+  data by Allison Horst, Alison Hill and Kristen Gorman, from
+  [allisonhorst/palmerpenguins](https://github.com/allisonhorst/palmerpenguins)
+  (`inst/extdata/penguins.csv`), licence **CC0 1.0** (public domain dedication).
+  Served from this repository, same origin; missing values are `NA`.
+
 - **Sample data** (`transactions-10m.parquet`): synthetic transactions
   generated for this demo by TOCLOCO Inc. No personal data; no external
   licence applies.
@@ -100,7 +121,7 @@ through its `filters`, `sort` and KPI APIs to reproduce the numbers above.
 ## Demo code licence
 
 MIT — see [LICENSE](LICENSE). This covers the files in this repository
-(`index.html`, `app.js`, `engine.js`, `schema.js`, `viewers.js`); it does not
+(`index.html`, `app.js`, `engine.js`, `schema.js`, `sql.js`, `viewers.js`); it does not
 relicense Lattice Grid itself, which is loaded from the CDN under its own
 commercial licence.
 

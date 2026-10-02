@@ -7,9 +7,10 @@
 // one deliberate network fetch on the page. Either way the grid sits on
 // duckdbAdapter + createPushdownSource, so every filter, sort and aggregate
 // after that runs in DuckDB, not in this file.
-import { startEngine, registerDropped, registerSample } from './engine.js?v=20261002f-0009';
-import { inspectSchema } from './schema.js?v=20261002f-0009';
-import { mountViewers } from './viewers.js?v=20261002f-0009';
+import { startEngine, registerDropped, registerSample } from './engine.js?v=20261002g-1630';
+import { inspectSchema } from './schema.js?v=20261002g-1630';
+import { mountViewers } from './viewers.js?v=20261002g-1630';
+import { registerBundled, exposeData, runSql, mountPivot } from './sql.js?v=20261002g-1630';
 
 const SAMPLE_URL = 'https://data.latticegrid.dev/samples/transactions-10m.parquet';
 const el = (id) => document.getElementById(id);
@@ -53,8 +54,9 @@ function showLastSql() { el('sql').textContent = engine.lastSql() || '—'; }
  * and rebuild the grid and its viewers over it.
  * @param {string} from the DuckDB FROM expression
  * @param {string} label shown in the status line
+ * @param {boolean} [asResult] a SQL result: pivot replaces the map, row count is DuckDB's
  */
-async function openRelation(from, label) {
+async function openRelation(from, label, asResult = false) {
   // Cleared up front, not just set at the end: a probe (or a second click)
   // reading `window.__demo` while this is still in flight must see that the
   // previous relation is gone, not the stale one.
@@ -86,7 +88,14 @@ async function openRelation(from, label) {
   });
   const firstRowsMs = Math.round(performance.now() - t0);
   showLastSql();
-  viewers = mountViewers(grid, meta, els);
+  viewers = mountViewers(grid, asResult ? { ...meta, position: null } : meta, els);
+  el('pivot-panel').hidden = true;
+  if (asResult) {
+    els.layout.classList.remove('no-map');
+    const pivot = mountPivot(meta, createGrid, createPushdownSource({ adapter, pageSize: 100, aggregates: { default: 'engine' } }));
+    const kill = viewers.destroy;
+    viewers.destroy = () => { pivot.destroy(); kill(); };
+  }
   status(`${label}: first rows in ${firstRowsMs} ms.`);
   window.__demo = { grid, source, engine, meta, viewers, timings: { firstRowsMs } };
 }
@@ -104,6 +113,7 @@ async function openFile(file) {
     sinceOpenBase = 0;
     const { from } = await registerDropped(engine, file);
     await openRelation(from, file.name);
+    await exposeData(engine, from, false);
   } catch (error) {
     console.error('[local-file demo] openFile', error);
     status(`Failed to open "${file.name}": ${error.message}`);
@@ -124,12 +134,40 @@ async function loadSample() {
     const { from, bytes } = await registerSample(engine, SAMPLE_URL,
       (loaded, total) => status(`Fetching the sample: ${(loaded / 1e6).toFixed(1)} MB${total ? ` of ${(total / 1e6).toFixed(1)} MB` : ''}…`));
     await openRelation(from, `the sample (${(bytes / 1e6).toFixed(1)} MB fetched)`);
+    await exposeData(engine, from, false);
   } catch (error) {
     console.error('[local-file demo] loadSample', error);
     status(`Failed to load the sample: ${error.message}`);
     showDropzone(true);
   }
 }
+
+/** The bundled public sample (Palmer penguins, CC0): same-origin, no external request. */
+async function loadBundled() {
+  showDropzone(false);
+  try {
+    if (!engine) engine = await startEngine();
+    openedAt = performance.now();
+    sinceOpenBase = 0;
+    const { from } = await registerBundled(engine);
+    await openRelation(from, 'penguins.csv (bundled sample)');
+    await exposeData(engine, from, true);
+    await runQuery();
+  } catch (error) {
+    console.error('[local-file demo] loadBundled', error);
+    status(`Failed to load the bundled sample: ${error.message}`);
+  }
+}
+
+/** Run the SQL box; the grid, chart, statistics and pivot then show the result. */
+async function runQuery() {
+  const done = await runSql(engine);
+  if (!done) { status('The query failed — DuckDB\'s message is under the SQL box.'); return; }
+  await openRelation('result', `SQL result (${done.rows.toLocaleString()} rows, counted by DuckDB)`, true);
+  window.__demo.duckdbRows = done.rows;
+}
+el('sql-run').addEventListener('click', runQuery);
+el('bundled').addEventListener('click', loadBundled);
 
 for (const zone of [document.body, el('dropzone')]) {
   zone.addEventListener('dragover', (e) => { e.preventDefault(); el('dropzone').hidden = false; el('dropzone').classList.add('drag'); });
