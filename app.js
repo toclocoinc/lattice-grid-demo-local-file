@@ -7,10 +7,10 @@
 // one deliberate network fetch on the page. Either way the grid sits on
 // duckdbAdapter + createPushdownSource, so every filter, sort and aggregate
 // after that runs in DuckDB, not in this file.
-import { startEngine, registerDropped, registerSample } from './engine.js?v=20261003u';
-import { inspectSchema } from './schema.js?v=20261003u';
-import { mountViewers } from './viewers.js?v=20261003u';
-import { registerBundled, exposeData, runSql, mountPivot } from './sql.js?v=20261003u';
+import { startEngine, registerDropped, registerSample } from './engine.js?v=20261005a';
+import { inspectSchema } from './schema.js?v=20261005a';
+import { mountViewers } from './viewers.js?v=20261005a';
+import { registerBundled, exposeData, runSql, mountPivot } from './sql.js?v=20261005a';
 
 const SAMPLE_URL = 'https://data.latticegrid.dev/samples/transactions-10m.parquet';
 const el = (id) => document.getElementById(id);

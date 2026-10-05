@@ -1,6 +1,6 @@
 # Your file never leaves the browser
 
-A [Lattice Grid](https://latticegrid.dev) demo: drop a Parquet, CSV, TSV or
+A [Lattice Grid](https://www.latticegrid.dev) demo: drop a Parquet, CSV, TSV or
 NDJSON file (or load the sample) and the grid, its KPI strip, chart, map and
 statistics panel all run against it — entirely inside DuckDB-WASM, in a Web
 Worker in this tab. Nothing is uploaded. Closing the tab discards the data.
